@@ -758,6 +758,8 @@ libcvc5_add_sources(
   theory/ff/core.h
   theory/ff/gb.cpp
   theory/ff/gb.h
+  theory/ff/ideal_membership.cpp
+  theory/ff/ideal_membership.h
   theory/ff/multi_roots.cpp
   theory/ff/multi_roots.h
   theory/ff/parse.cpp
