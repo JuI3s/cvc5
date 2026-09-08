@@ -31,6 +31,24 @@ namespace cvc5::internal {
 namespace theory {
 namespace ff {
 
+Scalar cocoaPower(Scalar base, CoCoA::BigInt exponent)
+{
+  Scalar result = CoCoA::one(CoCoA::owner(base));
+  while (!CoCoA::IsZero(exponent))
+  {
+    if (CoCoA::IsOdd(exponent))
+    {
+      result *= base;
+    }
+    exponent /= 2;
+    if (!CoCoA::IsZero(exponent))
+    {
+      base *= base;
+    }
+  }
+  return result;
+}
+
 std::optional<Scalar> cocoaEval(Poly poly, const PartialPoint& values)
 {
   CoCoA::ring coeffs = CoCoA::CoeffRing(CoCoA::owner(poly));
@@ -49,7 +67,7 @@ std::optional<Scalar> cocoaEval(Poly poly, const PartialPoint& values)
         {
           return {};
         }
-        term *= CoCoA::power(*values[i], exponents[i]);
+        term *= cocoaPower(*values[i], exponents[i]);
       }
     }
     out += term;
@@ -71,7 +89,7 @@ Scalar cocoaEval(Poly poly, const Point& values)
     {
       if (!CoCoA::IsZero(exponents[i]))
       {
-        term *= CoCoA::power(values[i], exponents[i]);
+        term *= cocoaPower(values[i], exponents[i]);
       }
     }
     out += term;

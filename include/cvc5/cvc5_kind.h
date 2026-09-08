@@ -2282,6 +2282,22 @@ enum ENUM(Kind)
    *   - TermManager::mkOp(Kind, const std::vector<uint32_t>&)
    */
   EVALUE(FINITE_FIELD_MULT),
+  /**
+   * Finite-field exponentiation by a non-negative integer.
+   *
+   * - Arity: ``1``
+   *
+   *   - ``1:`` Term of finite field Sort
+   *
+   * - Create Term of this Kind with:
+   *
+   *   - TermManager::mkTerm(const Op&, const std::vector<Term>&)
+   *
+   * - Create Op of this kind with:
+   *
+   *   - TermManager::mkOp(Kind, const std::string&)
+   */
+  EVALUE(FINITE_FIELD_POW),
 
   /* FP -------------------------------------------------------------------- */
 

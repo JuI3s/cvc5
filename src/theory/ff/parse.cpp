@@ -199,6 +199,7 @@ SpectrumOpt spectrum(const Node& t, uint8_t depth)
       return acc;
     }
     case Kind::FINITE_FIELD_BITSUM:
+    case Kind::FINITE_FIELD_POW:
     {
       // give up
       return {};

@@ -21,6 +21,7 @@
 // internal includes
 #include "options/ff_options.h"
 #include "theory/ff/cocoa_encoder.h"
+#include "theory/ff/ideal_membership.h"
 #include "theory/ff/multi_roots.h"
 
 namespace cvc5::internal {
@@ -32,6 +33,13 @@ FfResult gb(const std::vector<Node>& facts,
             const Env& env,
             FfStatistics* stats)
 {
+  if (std::optional<FfCore> conflict =
+          findPowerDifferenceConflict(facts, size, env))
+  {
+    if (stats) ++stats->d_numTrivialUnsat;
+    return *conflict;
+  }
+
   CocoaEncoder enc(env.getNodeManager(), size);
   // collect leaves
   for (const Node& node : facts)
@@ -61,6 +69,7 @@ FfResult gb(const std::vector<Node>& facts,
       generators.push_back(CoCoA::power(var, s) - var);
     }
   }
+
   Tracer tracer(generators);
   if (stats) ++stats->d_numGbRuns;
   if (env.getOptions().ff.ffTraceGb) tracer.setFunctionPointers();

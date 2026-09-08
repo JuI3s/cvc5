@@ -134,6 +134,7 @@ void Smt2State::addFiniteFieldOperators()
   addOperator(cvc5::Kind::FINITE_FIELD_MULT, "ff.mul");
   addOperator(cvc5::Kind::FINITE_FIELD_NEG, "ff.neg");
   addOperator(cvc5::Kind::FINITE_FIELD_BITSUM, "ff.bitsum");
+  addIndexedOperator(cvc5::Kind::FINITE_FIELD_POW, "ff.pow");
 }
 
 void Smt2State::addDatatypesOperators()
@@ -1534,6 +1535,11 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
       // should never happen
       parseError("Could not process internal parsed operator");
     }
+  }
+  else if (p.d_kind == Kind::FINITE_FIELD_POW)
+  {
+    Op op = d_tm.mkOp(p.d_kind, p.d_name);
+    return d_tm.mkTerm(op, args);
   }
   else if (p.d_kind == Kind::APPLY_TESTER || p.d_kind == Kind::APPLY_UPDATER)
   {

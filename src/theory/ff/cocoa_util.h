@@ -49,6 +49,9 @@ using PartialPoint = std::vector<std::optional<Scalar>>;
 /** An input (point/vector) to a polynomial */
 using Point = std::vector<Scalar>;
 
+/** Raise a ring element to a non-negative arbitrary-precision exponent. */
+Scalar cocoaPower(Scalar base, CoCoA::BigInt exponent);
+
 /**
  * partial evaluation of polynomials
  *

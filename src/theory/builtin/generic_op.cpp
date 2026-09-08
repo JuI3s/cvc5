@@ -21,6 +21,7 @@
 #include "theory/evaluator.h"
 #include "util/bitvector.h"
 #include "util/divisible.h"
+#include "util/finite_field_value.h"
 #include "util/floatingpoint.h"
 #include "util/iand.h"
 #include "util/rational.h"
@@ -75,8 +76,8 @@ bool GenericOp::isNumeralIndexedOperatorKind(Kind k)
 
 bool GenericOp::isIndexedOperatorKind(Kind k)
 {
-  return isNumeralIndexedOperatorKind(k) || k == Kind::APPLY_UPDATER
-         || k == Kind::APPLY_TESTER;
+  return isNumeralIndexedOperatorKind(k) || k == Kind::FINITE_FIELD_POW
+         || k == Kind::APPLY_UPDATER || k == Kind::APPLY_TESTER;
 }
 
 std::vector<Node> GenericOp::getIndicesForOperator(Kind k, Node n)
@@ -85,6 +86,12 @@ std::vector<Node> GenericOp::getIndicesForOperator(Kind k, Node n)
   std::vector<Node> indices;
   switch (k)
   {
+    case Kind::FINITE_FIELD_POW:
+    {
+      const FiniteFieldPower& op = n.getConst<FiniteFieldPower>();
+      indices.push_back(nm->mkConstInt(Rational(op.d_exponent)));
+      break;
+    }
     case Kind::DIVISIBLE:
     {
       const Divisible& op = n.getConst<Divisible>();
@@ -284,6 +291,16 @@ Node GenericOp::getOperatorForIndices(NodeManager* nm,
 {
   // all indices should be constant!
   Assert(isIndexedOperatorKind(k));
+  if (k == Kind::FINITE_FIELD_POW)
+  {
+    if (indices.size() != 1 || indices[0].getKind() != Kind::CONST_INTEGER)
+    {
+      return Node::null();
+    }
+    const Integer& exponent = indices[0].getConst<Rational>().getNumerator();
+    return exponent >= 0 ? nm->mkConst(FiniteFieldPower(exponent))
+                         : Node::null();
+  }
   if (isNumeralIndexedOperatorKind(k))
   {
     std::vector<uint32_t> numerals;

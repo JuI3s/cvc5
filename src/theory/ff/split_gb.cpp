@@ -15,11 +15,7 @@
 #include "theory/ff/split_gb.h"
 
 // external includes
-#include <CoCoA/BigIntOps.H>
-#include <CoCoA/SparsePolyIter.H>
-#include <CoCoA/SparsePolyOps-MinPoly.H>
 #include <CoCoA/SparsePolyOps-RingElem.H>
-#include <CoCoA/SparsePolyOps-ideal.H>
 #include <CoCoA/SparsePolyRing.H>
 
 // std includes
@@ -133,6 +129,13 @@ FfResult split(const std::vector<Node>& facts,
                const Env& env,
                FfStatistics* stats)
 {
+  if (std::optional<FfCore> conflict =
+          findPowerDifferenceConflict(facts, size, env))
+  {
+    if (stats) ++stats->d_numTrivialUnsat;
+    return *conflict;
+  }
+
   std::unordered_set<Node> bits{};
   CocoaEncoder enc(env.getNodeManager(), size);
   for (const auto& fact : facts)
@@ -145,6 +148,8 @@ FfResult split(const std::vector<Node>& facts,
     enc.addFact(fact);
   }
 
+  BitProp bitProp(facts, enc);
+
   Polys nlGens = enc.polys();
   Polys lGens = enc.bitsumPolys();
   for (const auto& p : enc.polys())
@@ -154,8 +159,6 @@ FfResult split(const std::vector<Node>& facts,
       lGens.push_back(p);
     }
   }
-
-  BitProp bitProp(facts, enc);
 
   std::vector<Polys> splitGens = {lGens, nlGens};
   SplitGb splitBasis = splitGb(splitGens, bitProp, env, stats);
@@ -379,41 +382,6 @@ void checkZero(const SplitGb& origBases, const Point& zero)
     }
   }
 }
-
-Gb::Gb() : d_ideal(), d_basis() {}
-Gb::Gb(const std::vector<Poly>& generators, const ResourceManager* rm) : Gb()
-{
-  if (generators.size())
-  {
-    d_ideal.emplace(CoCoA::ideal(generators));
-    d_basis = GBasisTimeout(d_ideal.value(), rm);
-  }
-}
-
-bool Gb::contains(const Poly& p) const
-{
-  return d_ideal.has_value() && CoCoA::IsElem(p, d_ideal.value());
-}
-bool Gb::isWholeRing() const
-{
-  return d_ideal.has_value() && CoCoA::IsOne(d_ideal.value());
-}
-Poly Gb::reduce(const Poly& p) const
-{
-  return d_ideal.has_value() ? CoCoA::NF(p, d_ideal.value()) : p;
-}
-bool Gb::zeroDimensional() const
-{
-  return d_ideal.has_value() && CoCoA::IsZeroDim(d_ideal.value());
-}
-Poly Gb::minimalPolynomial(const Poly& var) const
-{
-  Assert(zeroDimensional());
-  Assert(CoCoA::UnivariateIndetIndex(var) != -1);
-  Poly minPoly = CoCoA::MinPolyQuot(var, *d_ideal, var);
-  return minPoly;
-}
-const Polys& Gb::basis() const { return d_basis; }
 
 BitProp::BitProp(const std::vector<Node>& facts, CocoaEncoder& encoder)
     : d_bits(), d_bitsums(encoder.bitsums()), d_enc(&encoder)

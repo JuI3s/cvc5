@@ -54,14 +54,27 @@ CoCoA::symbol cocoaSym(const std::string& varName,
  * Two stages are necessary because when creating a CoCoA polynomial ring, one
  * must declare all the variables up-front. So, before we create any polynomials
  * (to encode terms), we must know all the (CoCoA) variables. CoCoA variables
- * are used to encode cvc5 variables, bitsums, and witnesses of disequality (a
- * != b is encoded as (a - b)w = 1, where w is the witness).
+ * are used to encode cvc5 variables and bitsums. In INVERSE_WITNESS mode they
+ * also encode witnesses of disequality (a != b becomes (a - b)w = 1). In
+ * MEMBERSHIP_TARGET mode, a - b is retained directly as a nonzero membership
+ * target and no witness is created.
  */
 class CocoaEncoder : public FieldObj
 {
  public:
+  enum class DisequalityMode
+  {
+    /** Encode f != 0 as f*w - 1 = 0. */
+    INVERSE_WITNESS,
+    /** Keep f as a direct ideal-membership target. */
+    MEMBERSHIP_TARGET,
+  };
+
   /** Create a new encoder, for this field. */
-  CocoaEncoder(NodeManager* nm, const FfSize& size);
+  CocoaEncoder(
+      NodeManager* nm,
+      const FfSize& size,
+      DisequalityMode disequalityMode = DisequalityMode::INVERSE_WITNESS);
   /** Add a fact (one must call this twice per fact, once per stage). */
   void addFact(const Node& fact);
   /** Start Stage::Encode. */
@@ -71,6 +84,11 @@ class CocoaEncoder : public FieldObj
    * Available in Stage::Encode.
    */
   const std::vector<Poly>& polys() const { return d_polys; }
+  /** Polynomials required to be nonzero in MEMBERSHIP_TARGET mode. */
+  const std::vector<Poly>& disequalityPolys() const
+  {
+    return d_disequalityPolys;
+  }
   /**
    * Get the bitsum polys.
    * These have form: x - b0 - 2*b1 - 4b2 ... - 2^n*b_n.
@@ -146,6 +164,8 @@ class CocoaEncoder : public FieldObj
 
   /** the stage that we're in; initially scanning */
   Stage d_stage{Stage::Scan};
+  /** How finite-field disequalities are represented. */
+  DisequalityMode d_disequalityMode;
 
   // populated during Stage::Scan
 
@@ -179,6 +199,8 @@ class CocoaEncoder : public FieldObj
   std::unordered_map<Node, Poly> d_cache{};
   /** polynomials that must be zero (except bitsums) */
   std::vector<Poly> d_polys{};
+  /** nonzero polynomials retained as direct membership targets */
+  std::vector<Poly> d_disequalityPolys{};
   /** bitsum polynomials that must be zero */
   std::vector<Poly> d_bitsumPolys{};
   /** polys to the facts that imply them */

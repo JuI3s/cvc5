@@ -60,6 +60,7 @@ TEST_F(TestApiBlackOp, getNumIndices)
 
   // Operators with 1 index
   Op divisible = d_tm.mkOp(Kind::DIVISIBLE, {4});
+  Op ffPow = d_tm.mkOp(Kind::FINITE_FIELD_POW, "18446744073709551616");
   Op bvRepeat = d_tm.mkOp(Kind::BITVECTOR_REPEAT, {5});
   Op bvZeroExtend = d_tm.mkOp(Kind::BITVECTOR_ZERO_EXTEND, {6});
   Op bvSignExtend = d_tm.mkOp(Kind::BITVECTOR_SIGN_EXTEND, {7});
@@ -71,6 +72,7 @@ TEST_F(TestApiBlackOp, getNumIndices)
   Op fpToSbv = d_tm.mkOp(Kind::FLOATINGPOINT_TO_SBV, {13});
 
   ASSERT_EQ(1, divisible.getNumIndices());
+  ASSERT_EQ(1, ffPow.getNumIndices());
   ASSERT_EQ(1, bvRepeat.getNumIndices());
   ASSERT_EQ(1, bvZeroExtend.getNumIndices());
   ASSERT_EQ(1, bvSignExtend.getNumIndices());
@@ -119,6 +121,7 @@ TEST_F(TestApiBlackOp, subscriptOperator)
 
   // Operators with 1 index
   Op divisible = d_tm.mkOp(Kind::DIVISIBLE, {4});
+  Op ffPow = d_tm.mkOp(Kind::FINITE_FIELD_POW, "18446744073709551616");
   Op bvRepeat = d_tm.mkOp(Kind::BITVECTOR_REPEAT, {5});
   Op bvZeroExtend = d_tm.mkOp(Kind::BITVECTOR_ZERO_EXTEND, {6});
   Op bvSignExtend = d_tm.mkOp(Kind::BITVECTOR_SIGN_EXTEND, {7});
@@ -131,6 +134,7 @@ TEST_F(TestApiBlackOp, subscriptOperator)
   Op regexpRepeat = d_tm.mkOp(Kind::REGEXP_REPEAT, {14});
 
   ASSERT_EQ(4, divisible[0].getUInt32Value());
+  ASSERT_EQ("18446744073709551616", ffPow[0].getIntegerValue());
   ASSERT_EQ(5, bvRepeat[0].getUInt32Value());
   ASSERT_EQ(6, bvZeroExtend[0].getUInt32Value());
   ASSERT_EQ(7, bvSignExtend[0].getUInt32Value());

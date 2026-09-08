@@ -53,6 +53,33 @@ struct FfSize
   Integer d_val;
 }; /* struct FfSize */
 
+/** Exponent of an indexed finite-field power operator. */
+struct FiniteFieldPower
+{
+  explicit FiniteFieldPower(const Integer& exponent);
+
+  bool operator==(const FiniteFieldPower& other) const
+  {
+    return d_exponent == other.d_exponent;
+  }
+  bool operator!=(const FiniteFieldPower& other) const
+  {
+    return !(*this == other);
+  }
+
+  const Integer d_exponent;
+};
+
+struct FiniteFieldPowerHashFunction
+{
+  size_t operator()(const FiniteFieldPower& power) const
+  {
+    return power.d_exponent.hash();
+  }
+};
+
+std::ostream& operator<<(std::ostream& os, const FiniteFieldPower& power);
+
 class FiniteFieldValue
 {
  public:

@@ -406,6 +406,9 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
       case Kind::DIVISIBLE_OP:
         out << "(_ divisible " << n.getConst<Divisible>().k << ")";
         break;
+      case Kind::FINITE_FIELD_POW_OP:
+        out << "(_ ff.pow " << n.getConst<FiniteFieldPower>().d_exponent << ")";
+        break;
       case Kind::SET_EMPTY:
         out << "(as set.empty ";
         toStreamType(out, n.getConst<EmptySet>().getType());
@@ -1230,6 +1233,7 @@ std::string Smt2Printer::smtKindString(Kind k)
     case Kind::FINITE_FIELD_BITSUM: return "ff.bitsum";
     case Kind::FINITE_FIELD_MULT: return "ff.mul";
     case Kind::FINITE_FIELD_NEG: return "ff.neg";
+    case Kind::FINITE_FIELD_POW: return "ff.pow";
     case Kind::FINITE_FIELD_IDEAL: return "@ff.ideal";
     case Kind::FINITE_FIELD_VARIETY: return "@ff.variety";
 

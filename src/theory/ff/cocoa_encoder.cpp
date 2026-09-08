@@ -16,12 +16,14 @@
 
 // external includes
 #include <CoCoA/BigInt.H>
+#include <CoCoA/PPMonoidEv.H>
 #include <CoCoA/QuotientRing.H>
 #include <CoCoA/SparsePolyIter.H>
 #include <CoCoA/SparsePolyOps-RingElem.H>
 #include <CoCoA/SparsePolyRing.H>
 
 // std includes
+#include <algorithm>
 #include <sstream>
 
 // internal includes
@@ -32,6 +34,44 @@
 namespace cvc5::internal {
 namespace theory {
 namespace ff {
+
+namespace {
+
+/**
+ * Raise a monomial without expanding it or converting its exponent to long.
+ * This is the compact path needed for cryptographic-size power differences.
+ */
+Poly powerMonomial(const Poly& base, const CoCoA::BigInt& exponent)
+{
+  const CoCoA::ring& ring = CoCoA::owner(base);
+  if (CoCoA::IsZero(exponent))
+  {
+    return CoCoA::one(ring);
+  }
+  if (CoCoA::IsZero(base))
+  {
+    return CoCoA::zero(ring);
+  }
+  if (!CoCoA::IsMonomial(base))
+  {
+    // General polynomial powers use CoCoA's ordinary expansion. Large such
+    // powers are inherently unsuitable for this sparse-polynomial encoding.
+    return cocoaPower(base, exponent);
+  }
+
+  CoCoA::SparsePolyIter it = CoCoA::BeginIter(base);
+  std::vector<CoCoA::BigInt> exponents;
+  CoCoA::BigExponents(exponents, CoCoA::PP(it));
+  for (CoCoA::BigInt& e : exponents)
+  {
+    e *= exponent;
+  }
+  return CoCoA::monomial(ring,
+                         cocoaPower(CoCoA::coeff(it), exponent),
+                         CoCoA::PPMonoidElem(CoCoA::PPM(ring), exponents));
+}
+
+}  // namespace
 
 #define LETTER(c) (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'))
 
@@ -73,8 +113,10 @@ CoCoA::symbol cocoaSym(const std::string& varName, std::optional<size_t> index)
   return index.has_value() ? CoCoA::symbol(s, *index) : CoCoA::symbol(s);
 }
 
-CocoaEncoder::CocoaEncoder(NodeManager* nm, const FfSize& size)
-    : FieldObj(nm, size)
+CocoaEncoder::CocoaEncoder(NodeManager* nm,
+                           const FfSize& size,
+                           DisequalityMode disequalityMode)
+    : FieldObj(nm, size), d_disequalityMode(disequalityMode)
 {
 }
 
@@ -117,7 +159,22 @@ void CocoaEncoder::endScan()
   Assert(d_stage == Stage::Scan);
   d_stage = Stage::Encode;
   d_coeffRing = CoCoA::NewZZmod(intToCocoa(size()));
-  d_polyRing = CoCoA::NewPolyRing(*d_coeffRing, d_syms);
+  const bool hasPower =
+      std::any_of(d_scanned.begin(), d_scanned.end(), [](const Node& node) {
+        return node.getKind() == Kind::FINITE_FIELD_POW;
+      });
+  if (hasPower)
+  {
+    // Power-difference constraints can contain exponents as large as p^2.
+    CoCoA::PPMonoid ppm = CoCoA::NewPPMonoidEv(
+        d_syms, CoCoA::StdDegRevLex, CoCoA::PPExpSize::big);
+    d_polyRing = CoCoA::NewPolyRing(*d_coeffRing, ppm);
+  }
+  else
+  {
+    // CoCoA's Groebner algorithms require the default small-exponent monoid.
+    d_polyRing = CoCoA::NewPolyRing(*d_coeffRing, d_syms);
+  }
   for (size_t i = 0, n = d_syms.size(); i < n; ++i)
   {
     d_symPolys.insert({extractStr(d_syms[i]), CoCoA::indet(*d_polyRing, i)});
@@ -147,7 +204,8 @@ void CocoaEncoder::addFact(const Node& fact)
         d_varSyms.insert({node, sym});
         d_symNodes.insert({extractStr(sym), node});
       }
-      else if (node.getKind() == Kind::NOT && isFfFact(node, size()))
+      else if (node.getKind() == Kind::NOT && isFfFact(node, size())
+               && d_disequalityMode == DisequalityMode::INVERSE_WITNESS)
       {
         Trace("ff::cocoa") << "CoCoA != sym for " << node << std::endl;
         CoCoA::symbol sym = freshSym("diseq", d_diseqSyms.size());
@@ -166,7 +224,15 @@ void CocoaEncoder::addFact(const Node& fact)
   {
     Assert(d_stage == Stage::Encode);
     encodeFact(fact);
-    d_polys.push_back(d_cache.at(fact));
+    if (fact.getKind() == Kind::NOT
+        && d_disequalityMode == DisequalityMode::MEMBERSHIP_TARGET)
+    {
+      d_disequalityPolys.push_back(d_cache.at(fact));
+    }
+    else
+    {
+      d_polys.push_back(d_cache.at(fact));
+    }
   }
 }
 
@@ -270,6 +336,13 @@ void CocoaEncoder::encodeTerm(const Node& t)
           elem *= d_cache[c];
         }
       }
+      // ((_ ff.pow n) x)
+      else if (node.getKind() == Kind::FINITE_FIELD_POW)
+      {
+        const Integer& exponent =
+            node.getOperator().getConst<FiniteFieldPower>().d_exponent;
+        elem = powerMonomial(d_cache[node[0]], intToCocoa(exponent));
+      }
       // ff.bitsum
       else if (node.getKind() == Kind::FINITE_FIELD_BITSUM)
       {
@@ -319,7 +392,9 @@ void CocoaEncoder::encodeFact(const Node& f)
     encodeTerm(f[0][0]);
     encodeTerm(f[0][1]);
     Poly diff = d_cache.at(f[0][0]) - d_cache.at(f[0][1]);
-    p = diff * symPoly(d_diseqSyms.at(f)) - 1;
+    p = d_disequalityMode == DisequalityMode::INVERSE_WITNESS
+            ? diff * symPoly(d_diseqSyms.at(f)) - 1
+            : diff;
   }
   if (!CoCoA::IsZero(p))
   {
