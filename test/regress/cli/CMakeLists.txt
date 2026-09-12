@@ -907,6 +907,8 @@ set(regress_0_tests
   regress0/ff/field_poly.smt2
   regress0/ff/multicheck.smt2
   regress0/ff/negneg.smt2
+  regress0/ff/power_operator_unsupported.smt2
+  regress0/ff/prime_subfield_f49.smt2
   regress0/ff/issue10937.smt2
   regress0/ff/issue11107.smt2
   regress0/ff/issue11932.smt2
@@ -4318,6 +4320,7 @@ set(regress_3_tests
   regress3/DRAGON_1.lus.sy
   regress3/eq_diamond14.smtv1.smt2
   regress3/error0.smt2
+  regress3/ff/power_multiplication_expansion.smt2
   regress3/friedman_n4_i5.smtv1.smt2
   regress3/hole9.cvc.smt2
   regress3/hole10.cvc.smt2
