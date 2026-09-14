@@ -54,4 +54,7 @@ time or resource limit. It is kept outside the regression suite because a
 successful completion is not expected with current cvc5.
 
 In one local run, the benchmark aborted in `NodeBuilder::realloc()` after
-46.495 seconds at 0.996 GiB peak resident memory, before solving began.
+46.495 seconds at 0.996 GiB peak resident memory, before solving began. cvc5
+expands the definitions and tries to flatten `x^(q^2)` into `q^2`
+multiplication children; this exceeds `NodeBuilder`'s child capacity and
+triggers its `toSize > d_nvMaxChildren` check.
