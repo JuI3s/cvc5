@@ -52,3 +52,20 @@ benchmark exercises multiplication expansion instead of
 `PowerDifferenceIdealMembership` and intentionally sets no benchmark-specific
 time or resource limit. It is kept outside the regression suite because a
 successful completion is not expected with current cvc5.
+
+In one local macOS run of this branch's testing build, instrumented with a
+180-second external cutoff, the BN254 benchmark aborted before producing a
+solver result:
+
+```text
+elapsed time: 46.495 s
+peak resident memory: 1,044,336 KiB (0.996 GiB)
+user CPU time: 31.742 s
+system CPU time: 2.888 s
+exit status: SIGABRT (-6)
+```
+
+The failure occurred in `NodeBuilder::realloc()` while constructing the
+flattened multiplication node, before finite-field ideal membership or root
+finding. These measurements document that run rather than specifying a
+portable runtime or memory expectation.
