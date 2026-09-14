@@ -147,6 +147,7 @@ PowerDifferenceIdealMembership::PowerDifferenceIdealMembership(
   // The default relaxation keeps the custom power basis separate and builds
   // membership only for the reduced generic ideal. It can miss membership
   // that depends on interactions between the two parts.
+  d_complete = !hasPowerDifferenceRules();
   d_remainderMembership =
       std::make_unique<CocoaIdealMembership>(genericGenerators);
 }
@@ -299,6 +300,39 @@ Poly PowerDifferenceIdealMembership::reduce(const Poly& p) const
                                : reduced;
 }
 
+std::optional<bool> checkIdealMembership(const std::vector<Node>& equalities,
+                                         const Node& target,
+                                         const FfSize& size,
+                                         const Env& env)
+{
+  CocoaEncoder enc(env.getNodeManager(),
+                   size,
+                   CocoaEncoder::DisequalityMode::MEMBERSHIP_TARGET);
+  for (const Node& equality : equalities)
+  {
+    enc.addFact(equality);
+  }
+  enc.addMembershipTarget(target);
+  enc.endScan();
+  for (const Node& equality : equalities)
+  {
+    enc.addFact(equality);
+  }
+  enc.addMembershipTarget(target);
+
+  Polys generators = enc.polys();
+  generators.insert(
+      generators.end(), enc.bitsumPolys().begin(), enc.bitsumPolys().end());
+  PowerDifferenceIdealMembership membership(generators,
+                                            env.getResourceManager());
+  Assert(enc.membershipTargets().size() == 1);
+  if (membership.contains(enc.membershipTargets()[0]))
+  {
+    return true;
+  }
+  return membership.isComplete() ? std::make_optional(false) : std::nullopt;
+}
+
 std::optional<FfCore> findPowerDifferenceConflict(
     const std::vector<Node>& facts, const FfSize& size, const Env& env)
 {
@@ -327,7 +361,7 @@ std::optional<FfCore> findPowerDifferenceConflict(
   {
     enc.addFact(fact);
   }
-  if (enc.disequalityPolys().empty())
+  if (enc.membershipTargets().empty())
   {
     return std::nullopt;
   }
@@ -341,7 +375,7 @@ std::optional<FfCore> findPowerDifferenceConflict(
   {
     return std::nullopt;
   }
-  for (const Poly& target : enc.disequalityPolys())
+  for (const Poly& target : enc.membershipTargets())
   {
     // If target is in the equality ideal, target = 0 contradicts target != 0.
     if (membership.contains(target))

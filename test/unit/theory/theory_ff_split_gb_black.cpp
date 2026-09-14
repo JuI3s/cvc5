@@ -383,6 +383,7 @@ TEST_F(TestTheoryFfSplitGb, PowerDifferenceBn254SubfieldMembership)
   // Check x^(q^2) - x in <x^q - x> directly. There is no disequality
   // encoding, witness variable, combined ideal, or root-finding step.
   ff::PowerDifferenceIdealMembership membership{{xPower(q) - x}, nullptr};
+  ASSERT_TRUE(membership.isComplete());
   ASSERT_TRUE(membership.contains(xPower(q * q) - x));
 }
 
@@ -402,6 +403,8 @@ TEST_F(TestTheoryFfSplitGb, PowerDifferenceMixedIdeal)
       ff::PowerDifferenceIdealMembership::MixedIdealStrategy::COMPLETE_GB};
 
   ASSERT_TRUE(relaxed.hasPowerDifferenceRules());
+  ASSERT_FALSE(relaxed.isComplete());
+  ASSERT_TRUE(complete.isComplete());
   // The default generic-only relaxation misses this power/generic interaction.
   ASSERT_FALSE(relaxed.contains(y));
   ASSERT_EQ(relaxed.reduce(y), y);

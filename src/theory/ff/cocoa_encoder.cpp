@@ -227,13 +227,27 @@ void CocoaEncoder::addFact(const Node& fact)
     if (fact.getKind() == Kind::NOT
         && d_disequalityMode == DisequalityMode::MEMBERSHIP_TARGET)
     {
-      d_disequalityPolys.push_back(d_cache.at(fact));
+      d_membershipTargets.push_back(d_cache.at(fact));
     }
     else
     {
       d_polys.push_back(d_cache.at(fact));
     }
   }
+}
+
+void CocoaEncoder::addMembershipTarget(const Node& target)
+{
+  Assert(d_disequalityMode == DisequalityMode::MEMBERSHIP_TARGET);
+  Assert(target.getKind() == Kind::EQUAL);
+  if (d_stage == Stage::Scan)
+  {
+    addFact(target);
+    return;
+  }
+  Assert(d_stage == Stage::Encode);
+  encodeFact(target);
+  d_membershipTargets.push_back(d_cache.at(target));
 }
 
 std::vector<Node> CocoaEncoder::bitsums() const

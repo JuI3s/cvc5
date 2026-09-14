@@ -77,6 +77,9 @@
 #include "theory/quantifiers/sygus_sampler.h"
 #include "theory/quantifiers_engine.h"
 #include "theory/rewriter.h"
+#ifdef CVC5_USE_COCOA
+#include "theory/ff/ideal_membership.h"
+#endif
 #include "theory/smt_engine_subsolver.h"
 #include "theory/theory_engine.h"
 #include "util/random.h"
@@ -1590,6 +1593,18 @@ std::vector<Node> SolverEngine::getSubstitutedAssertions()
 }
 
 Env& SolverEngine::getEnv() { return *d_env.get(); }
+
+std::optional<bool> SolverEngine::checkFiniteFieldIdealMembership(
+    const std::vector<Node>& equalities, const Node& target)
+{
+#ifdef CVC5_USE_COCOA
+  return theory::ff::checkIdealMembership(
+      equalities, target, target[0].getType().getFfSize(), getEnv());
+#else
+  throw ModalException(
+      "check-ideal-membership requires a build with CoCoA support");
+#endif
+}
 
 void SolverEngine::declareSepHeap(TypeNode locT, TypeNode dataT)
 {

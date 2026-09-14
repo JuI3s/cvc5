@@ -21,7 +21,9 @@ UNIT_TARGET = "theory_ff_split_gb_black"
 UNIT_TEST = r"^unit/theory/theory_ff_split_gb_black$"
 POWER_DIFFERENCE_FILTER = "TestTheoryFfSplitGb.PowerDifference*"
 REGRESSION_TESTS = (
-    r"^regress0/ff/(power_difference_bn254|prime_subfield_f49)\.smt2$"
+    r"^regress0/ff/(ideal_membership_command|"
+    r"ideal_membership_mixed_unknown|power_difference_bn254|"
+    r"prime_subfield_f49)\.smt2$"
 )
 BENCHMARK = (
     REPO_ROOT

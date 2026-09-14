@@ -77,6 +77,8 @@ class CocoaEncoder : public FieldObj
       DisequalityMode disequalityMode = DisequalityMode::INVERSE_WITNESS);
   /** Add a fact (one must call this twice per fact, once per stage). */
   void addFact(const Node& fact);
+  /** Add a positive equality as a direct membership target in both stages. */
+  void addMembershipTarget(const Node& target);
   /** Start Stage::Encode. */
   void endScan();
   /**
@@ -84,10 +86,10 @@ class CocoaEncoder : public FieldObj
    * Available in Stage::Encode.
    */
   const std::vector<Poly>& polys() const { return d_polys; }
-  /** Polynomials required to be nonzero in MEMBERSHIP_TARGET mode. */
-  const std::vector<Poly>& disequalityPolys() const
+  /** Direct membership-target polynomials. */
+  const std::vector<Poly>& membershipTargets() const
   {
-    return d_disequalityPolys;
+    return d_membershipTargets;
   }
   /**
    * Get the bitsum polys.
@@ -200,7 +202,7 @@ class CocoaEncoder : public FieldObj
   /** polynomials that must be zero (except bitsums) */
   std::vector<Poly> d_polys{};
   /** nonzero polynomials retained as direct membership targets */
-  std::vector<Poly> d_disequalityPolys{};
+  std::vector<Poly> d_membershipTargets{};
   /** bitsum polynomials that must be zero */
   std::vector<Poly> d_bitsumPolys{};
   /** polys to the facts that imply them */
