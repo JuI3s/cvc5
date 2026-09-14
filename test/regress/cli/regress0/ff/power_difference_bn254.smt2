@@ -1,6 +1,4 @@
 ; REQUIRES: cocoa
-; COMMAND-LINE: --ff-solver=gb
-; COMMAND-LINE: --ff-solver=split
 ; EXPECT: true
 
 ; BN254 base-field prime q. The asserted equality generates <x^q - x>, and
