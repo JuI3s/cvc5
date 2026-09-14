@@ -47,6 +47,8 @@ contrib/power_difference/run_tests.py --benchmark
 
 `--regressions` also checks the BN254 Frobenius implication through compact
 `ff.pow` terms and the explicit `F_7` subfield of `F_49`. `--benchmark` runs
-the slow Kyber-prime naive-multiplication reproducer. The benchmark exercises
-the multiplication expansion instead of `PowerDifferenceIdealMembership` and
-intentionally sets no benchmark-specific time or resource limit.
+the intentionally infeasible BN254 naive-multiplication reproducer. The
+benchmark exercises multiplication expansion instead of
+`PowerDifferenceIdealMembership` and intentionally sets no benchmark-specific
+time or resource limit. It is kept outside the regression suite because a
+successful completion is not expected with current cvc5.

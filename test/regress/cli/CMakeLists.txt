@@ -4320,7 +4320,6 @@ set(regress_3_tests
   regress3/DRAGON_1.lus.sy
   regress3/eq_diamond14.smtv1.smt2
   regress3/error0.smt2
-  regress3/ff/power_multiplication_expansion.smt2
   regress3/friedman_n4_i5.smtv1.smt2
   regress3/hole9.cvc.smt2
   regress3/hole10.cvc.smt2

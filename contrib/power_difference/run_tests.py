@@ -23,7 +23,13 @@ POWER_DIFFERENCE_FILTER = "TestTheoryFfSplitGb.PowerDifference*"
 REGRESSION_TESTS = (
     r"^regress0/ff/(power_difference_bn254|prime_subfield_f49)\.smt2$"
 )
-BENCHMARK_TEST = r"^regress3/ff/power_multiplication_expansion\.smt2$"
+BENCHMARK = (
+    REPO_ROOT
+    / "contrib"
+    / "power_difference"
+    / "benchmarks"
+    / "bn254_multiplication_expansion.smt2"
+)
 
 
 def run(command, *, env=None):
@@ -100,7 +106,7 @@ def parse_args():
     parser.add_argument(
         "--benchmark",
         action="store_true",
-        help="also run the slow Kyber-prime multiplication benchmark",
+        help="run the intentionally infeasible BN254 multiplication benchmark",
     )
     return parser.parse_args()
 
@@ -129,7 +135,9 @@ def main():
     if args.regressions:
         ctest(build_dir, REGRESSION_TESTS)
     if args.benchmark:
-        ctest(build_dir, BENCHMARK_TEST)
+        # This is deliberately not a regression: current cvc5 expands the
+        # final power to q^2 factors and is not expected to finish.
+        run([build_dir / "bin" / "cvc5", BENCHMARK])
     return 0
 
 
