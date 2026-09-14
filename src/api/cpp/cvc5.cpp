@@ -251,6 +251,7 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::FINITE_FIELD_BITSUM,
                   internal::Kind::FINITE_FIELD_BITSUM),
         KIND_ENUM(Kind::FINITE_FIELD_MULT, internal::Kind::FINITE_FIELD_MULT),
+        KIND_ENUM(Kind::FINITE_FIELD_POW, internal::Kind::FINITE_FIELD_POW),
         KIND_ENUM(Kind::FINITE_FIELD_ADD, internal::Kind::FINITE_FIELD_ADD),
         KIND_ENUM(Kind::FINITE_FIELD_NEG, internal::Kind::FINITE_FIELD_NEG),
         /* FP --------------------------------------------------------------- */
@@ -653,6 +654,8 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::CONST_FINITE_FIELD, Kind::CONST_FINITE_FIELD},
         {internal::Kind::FINITE_FIELD_BITSUM, Kind::FINITE_FIELD_BITSUM},
         {internal::Kind::FINITE_FIELD_MULT, Kind::FINITE_FIELD_MULT},
+        {internal::Kind::FINITE_FIELD_POW, Kind::FINITE_FIELD_POW},
+        {internal::Kind::FINITE_FIELD_POW_OP, Kind::FINITE_FIELD_POW},
         {internal::Kind::FINITE_FIELD_ADD, Kind::FINITE_FIELD_ADD},
         {internal::Kind::FINITE_FIELD_NEG, Kind::FINITE_FIELD_NEG},
         /* FP -------------------------------------------------------------- */
@@ -887,6 +890,7 @@ const static std::
 /* Set of kinds for indexed operators */
 const static std::unordered_set<Kind> s_indexed_kinds(
     {Kind::DIVISIBLE,
+     Kind::FINITE_FIELD_POW,
      Kind::IAND,
      Kind::BITVECTOR_REPEAT,
      Kind::BITVECTOR_ZERO_EXTEND,
@@ -916,6 +920,7 @@ const static std::unordered_map<Kind, internal::Kind> s_op_kinds{
     {Kind::BITVECTOR_SIGN_EXTEND, internal::Kind::BITVECTOR_SIGN_EXTEND_OP},
     {Kind::BITVECTOR_ZERO_EXTEND, internal::Kind::BITVECTOR_ZERO_EXTEND_OP},
     {Kind::DIVISIBLE, internal::Kind::DIVISIBLE_OP},
+    {Kind::FINITE_FIELD_POW, internal::Kind::FINITE_FIELD_POW_OP},
     {Kind::FLOATINGPOINT_TO_SBV, internal::Kind::FLOATINGPOINT_TO_SBV_OP},
     {Kind::FLOATINGPOINT_TO_UBV, internal::Kind::FLOATINGPOINT_TO_UBV_OP},
     {Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV,
@@ -2215,6 +2220,7 @@ size_t Op::getNumIndicesHelper() const
   switch (k)
   {
     case Kind::DIVISIBLE: size = 1; break;
+    case Kind::FINITE_FIELD_POW: size = 1; break;
     case Kind::BITVECTOR_REPEAT: size = 1; break;
     case Kind::BITVECTOR_ZERO_EXTEND: size = 1; break;
     case Kind::BITVECTOR_SIGN_EXTEND: size = 1; break;
@@ -2269,6 +2275,15 @@ Term Op::getIndexHelper(size_t index)
       t = TermManager::mkRationalValHelper(
           d_nm,
           internal::Rational(d_node->getConst<internal::Divisible>().k),
+          true);
+      break;
+    }
+    case Kind::FINITE_FIELD_POW:
+    {
+      t = TermManager::mkRationalValHelper(
+          d_nm,
+          internal::Rational(
+              d_node->getConst<internal::FiniteFieldPower>().d_exponent),
           true);
       break;
     }
@@ -6042,6 +6057,10 @@ Op TermManager::mkOp(Kind kind, const std::vector<uint32_t>& args)
       CVC5_API_CHECK_OP_INDEX(args[0] != 0, args, 0) << "a value != 0";
       res = mkOpHelper(kind, internal::Divisible(args[0]));
       break;
+    case Kind::FINITE_FIELD_POW:
+      CVC5_API_OP_CHECK_ARITY(nargs, 1, kind);
+      res = mkOpHelper(kind, internal::FiniteFieldPower(args[0]));
+      break;
     case Kind::FLOATINGPOINT_TO_SBV:
       CVC5_API_OP_CHECK_ARITY(nargs, 1, kind);
       res = mkOpHelper(kind, internal::FloatingPointToSBV(args[0]));
@@ -6141,7 +6160,9 @@ Op TermManager::mkOp(Kind kind, const std::string& arg)
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_KIND_CHECK(kind);
-  CVC5_API_KIND_CHECK_EXPECTED((kind == Kind::DIVISIBLE), kind) << "DIVISIBLE";
+  CVC5_API_KIND_CHECK_EXPECTED(
+      (kind == Kind::DIVISIBLE || kind == Kind::FINITE_FIELD_POW), kind)
+      << "DIVISIBLE or FINITE_FIELD_POW";
   //////// all checks before this line
   Op res;
   /* CLN and GMP handle this case differently, CLN interprets it as 0, GMP
@@ -6149,7 +6170,17 @@ Op TermManager::mkOp(Kind kind, const std::string& arg)
    * as invalid. */
   CVC5_API_ARG_CHECK_EXPECTED(arg != ".", arg)
       << "a string representing an integer, real or rational value.";
-  res = mkOpHelper(kind, internal::Divisible(internal::Integer(arg)));
+  if (kind == Kind::DIVISIBLE)
+  {
+    res = mkOpHelper(kind, internal::Divisible(internal::Integer(arg)));
+  }
+  else
+  {
+    internal::Integer exponent(arg);
+    CVC5_API_ARG_CHECK_EXPECTED(exponent >= 0, arg)
+        << "a non-negative integer exponent.";
+    res = mkOpHelper(kind, internal::FiniteFieldPower(exponent));
+  }
   return res;
   ////////
   CVC5_API_TRY_CATCH_END;

@@ -657,16 +657,20 @@ TEST_F(TestApiBlackTermManager, mkOp)
 {
   // mkOp(Kind kind, const std::string& arg)
   ASSERT_NO_THROW(d_tm.mkOp(Kind::DIVISIBLE, "2147483648"));
+  ASSERT_NO_THROW(d_tm.mkOp(Kind::FINITE_FIELD_POW, "18446744073709551616"));
+  ASSERT_THROW(d_tm.mkOp(Kind::FINITE_FIELD_POW, "-1"), CVC5ApiException);
   ASSERT_THROW(d_tm.mkOp(Kind::BITVECTOR_EXTRACT, "asdf"), CVC5ApiException);
 
   // mkOp(Kind kind, std::vector<uint32_t> args)
   ASSERT_NO_THROW(d_tm.mkOp(Kind::DIVISIBLE, {1}));
+  ASSERT_NO_THROW(d_tm.mkOp(Kind::FINITE_FIELD_POW, {1}));
   ASSERT_NO_THROW(d_tm.mkOp(Kind::BITVECTOR_ROTATE_LEFT, {1}));
   ASSERT_NO_THROW(d_tm.mkOp(Kind::BITVECTOR_ROTATE_RIGHT, {1}));
   ASSERT_THROW(d_tm.mkOp(Kind::BITVECTOR_EXTRACT, {1}), CVC5ApiException);
 
   ASSERT_NO_THROW(d_tm.mkOp(Kind::BITVECTOR_EXTRACT, {1, 1}));
   ASSERT_THROW(d_tm.mkOp(Kind::DIVISIBLE, {1, 2}), CVC5ApiException);
+  ASSERT_THROW(d_tm.mkOp(Kind::FINITE_FIELD_POW, {1, 2}), CVC5ApiException);
 
   ASSERT_NO_THROW(d_tm.mkOp(Kind::TUPLE_PROJECT, {1, 2, 2}));
 }

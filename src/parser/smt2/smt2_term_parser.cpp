@@ -1255,7 +1255,13 @@ ParseOp Smt2TermParser::continueParseIndexedIdentifier(bool isOperator)
     switch (tok)
     {
       case Token::INTEGER_LITERAL:
-        if (symbols.empty())
+        if (name == "ff.pow")
+        {
+          // Finite-field powers accept exponents larger than uint32_t. Keep
+          // the numeral as text until the API constructs its Integer payload.
+          symbols.push_back(d_lex.tokenStr());
+        }
+        else if (symbols.empty())
         {
           numerals.push_back(tokenStrToUnsigned());
         }
@@ -1318,6 +1324,16 @@ ParseOp Smt2TermParser::continueParseIndexedIdentifier(bool isOperator)
     // handles:
     // - testers and updaters indexed by constructor names
     Kind k = d_state.getIndexedOpKind(name);
+    if (k == Kind::FINITE_FIELD_POW)
+    {
+      if (symbols.size() != 1)
+      {
+        d_lex.parseError("Expected one exponent for ff.pow");
+      }
+      p.d_kind = k;
+      p.d_name = symbols[0];
+      return p;
+    }
     if (k != Kind::APPLY_UPDATER && k != Kind::APPLY_TESTER
         && k != Kind::NULLABLE_LIFT)
     {

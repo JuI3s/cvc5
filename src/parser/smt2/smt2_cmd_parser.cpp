@@ -67,6 +67,7 @@ Smt2CmdParser::Smt2CmdParser(Smt2Lexer& lex,
   {
     d_table["block-model"] = Token::BLOCK_MODEL_TOK;
     d_table["block-model-values"] = Token::BLOCK_MODEL_VALUES_TOK;
+    d_table["check-ideal-membership"] = Token::CHECK_IDEAL_MEMBERSHIP_TOK;
     d_table["declare-heap"] = Token::DECLARE_HEAP_TOK;
     d_table["declare-oracle-fun"] = Token::DECLARE_ORACLE_FUN_TOK;
     d_table["declare-pool"] = Token::DECLARE_POOL_TOK;
@@ -188,6 +189,20 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
       d_state.checkThatLogicIsSet();
       std::vector<Term> terms = d_tparser.parseTermList();
       cmd.reset(new CheckSatAssumingCommand(terms));
+    }
+    break;
+    // (check-ideal-membership <finite-field equality>)
+    case Token::CHECK_IDEAL_MEMBERSHIP_TOK:
+    {
+      d_state.checkThatLogicIsSet();
+      Term target = d_tparser.parseTerm();
+      if (target.getKind() != Kind::EQUAL
+          || !target[0].getSort().isFiniteField())
+      {
+        d_lex.parseError(
+            "Expected a finite-field equality for check-ideal-membership");
+      }
+      cmd.reset(new CheckIdealMembershipCommand(target));
     }
     break;
     // (check-synth)

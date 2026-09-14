@@ -19,6 +19,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -851,6 +852,10 @@ class CVC5_EXPORT SolverEngine
    * Get the enviornment from this solver engine.
    */
   Env& getEnv();
+
+  /** Check finite-field ideal membership without a satisfiability query. */
+  std::optional<bool> checkFiniteFieldIdealMembership(
+      const std::vector<Node>& equalities, const Node& target);
   /* .......................................................................  */
  private:
   /* .......................................................................  */

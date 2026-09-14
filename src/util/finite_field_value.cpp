@@ -16,6 +16,17 @@
 
 namespace cvc5::internal {
 
+FiniteFieldPower::FiniteFieldPower(const Integer& exponent)
+    : d_exponent(exponent)
+{
+  Assert(exponent >= 0) << "finite-field exponent must be non-negative";
+}
+
+std::ostream& operator<<(std::ostream& os, const FiniteFieldPower& power)
+{
+  return os << "ff.pow " << power.d_exponent;
+}
+
 const Integer& FiniteFieldValue::getValue() const { return d_value; }
 
 bool FiniteFieldValue::isZero() const { return d_value.isZero(); }

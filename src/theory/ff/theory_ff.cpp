@@ -87,6 +87,7 @@ void TheoryFiniteFields::finishInit()
   Assert(d_equalityEngine != nullptr);
 
   d_equalityEngine->addFunctionKind(Kind::FINITE_FIELD_MULT);
+  d_equalityEngine->addFunctionKind(Kind::FINITE_FIELD_POW);
   d_equalityEngine->addFunctionKind(Kind::FINITE_FIELD_NEG);
   d_equalityEngine->addFunctionKind(Kind::FINITE_FIELD_ADD);
 }

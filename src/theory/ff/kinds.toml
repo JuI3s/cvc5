@@ -54,6 +54,24 @@ comment  = "multiplication of two or more field elements"
 typerule = "::cvc5::internal::theory::ff::FiniteFieldFixedFieldTypeRule"
 
 [[kinds]]
+type     = "parameterized"
+K1       = "FINITE_FIELD_POW"
+K2       = "FINITE_FIELD_POW_OP"
+children = 1
+comment  = "finite-field exponentiation by a non-negative integer"
+typerule = "::cvc5::internal::theory::ff::FiniteFieldFixedFieldTypeRule"
+
+[[kinds]]
+type      = "constant"
+name      = "FINITE_FIELD_POW_OP"
+class_key = "struct"
+cpp_type  = "FiniteFieldPower"
+hasher    = "::cvc5::internal::FiniteFieldPowerHashFunction"
+header    = "util/finite_field_value.h"
+comment   = "operator for finite-field exponentiation; payload is a non-negative integer exponent"
+typerule  = "SimpleTypeRule<RBuiltinOperator>"
+
+[[kinds]]
 type     = "operator"
 name     = "FINITE_FIELD_NEG"
 children = 1

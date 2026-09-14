@@ -16,6 +16,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include "parser/sym_manager.h"
 #include "printer/printer.h"
 #include "proof/unsat_core.h"
+#include "smt/solver_engine.h"
 #include "util/smt2_quote_string.h"
 #include "util/utility.h"
 
@@ -197,6 +199,15 @@ internal::TypeNode Cmd::grammarToTypeNode(cvc5::Grammar* grammar)
 {
   return grammar == nullptr ? internal::TypeNode::null()
                             : sortToTypeNode(grammar->resolve());
+}
+
+std::optional<bool> Cmd::checkFiniteFieldIdealMembership(
+    cvc5::Solver* solver,
+    const std::vector<cvc5::Term>& equalities,
+    const cvc5::Term& target)
+{
+  return solver->d_slv->checkFiniteFieldIdealMembership(
+      termVectorToNodes(equalities), termToNode(target));
 }
 
 std::ostream& operator<<(std::ostream& out, const Cmd& c)
@@ -381,6 +392,69 @@ std::string CheckSatCommand::getCommandName() const { return "check-sat"; }
 void CheckSatCommand::toStream(std::ostream& out) const
 {
   internal::Printer::getPrinter(out)->toStreamCmdCheckSat(out);
+}
+
+/* -------------------------------------------------------------------------- */
+/* class CheckIdealMembershipCommand                                          */
+/* -------------------------------------------------------------------------- */
+
+CheckIdealMembershipCommand::CheckIdealMembershipCommand(cvc5::Term target)
+    : d_target(target)
+{
+}
+
+cvc5::Term CheckIdealMembershipCommand::getTarget() const { return d_target; }
+
+void CheckIdealMembershipCommand::invoke(cvc5::Solver* solver,
+                                         CVC5_UNUSED SymManager* sm)
+{
+  Trace("dtview::command") << "* ~COMMAND: " << getCommandName() << " "
+                           << d_target << "~" << std::endl;
+  try
+  {
+    const cvc5::Sort field = d_target[0].getSort();
+    const std::vector<cvc5::Term> assertions = solver->getAssertions();
+    for (const cvc5::Term& assertion : assertions)
+    {
+      if (assertion.getKind() != cvc5::Kind::EQUAL
+          || assertion[0].getSort() != field
+          || !assertion[1].getSort().isFiniteField())
+      {
+        throw std::invalid_argument(
+            "check-ideal-membership requires finite-field equality "
+            "assertions over the target field");
+      }
+    }
+    d_result = checkFiniteFieldIdealMembership(solver, assertions, d_target);
+    d_commandStatus = CommandSuccess::instance();
+  }
+  catch (exception& e)
+  {
+    d_commandStatus = new CommandFailure(e.what());
+  }
+}
+
+void CheckIdealMembershipCommand::printResult(CVC5_UNUSED cvc5::Solver* solver,
+                                              std::ostream& out) const
+{
+  if (!d_result.has_value())
+  {
+    out << "unknown" << endl;
+  }
+  else
+  {
+    out << (*d_result ? "true" : "false") << endl;
+  }
+}
+
+std::string CheckIdealMembershipCommand::getCommandName() const
+{
+  return "check-ideal-membership";
+}
+
+void CheckIdealMembershipCommand::toStream(std::ostream& out) const
+{
+  out << "(check-ideal-membership " << d_target << ')';
 }
 
 /* -------------------------------------------------------------------------- */
