@@ -66,3 +66,13 @@ In one local run, the benchmark aborted in `NodeBuilder::realloc()` after
 expands the definitions and tries to flatten `x^(q^2)` into `q^2`
 multiplication children; this exceeds `NodeBuilder`'s child capacity and
 triggers its `toSize > d_nvMaxChildren` check.
+
+To stop the baseline after 20 seconds and print its output, memory use, and
+latest sampled call stack:
+
+```sh
+contrib/power_difference/trace_bn254_blowup.py --binary build/bin/cvc5
+```
+
+The script freezes the solver at the cutoff before collecting the stack. Full
+stdout, stderr, and stack artifacts are retained in the directory it reports.
