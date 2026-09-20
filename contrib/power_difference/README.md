@@ -17,6 +17,14 @@ write a negated target or an inverse witness. The default relaxed mixed
 strategy reports `unknown` instead of claiming non-membership when its result
 is inconclusive.
 
+This command is a polynomial-algebra interface, not a native extension-field
+sort. A declaration of sort `(_ FiniteField p)` supplies the coefficient field
+`F_p`; declared symbols are encoded as indeterminates of a polynomial ring over
+`F_p`. Extension-field behavior must be supplied explicitly through polynomial
+or power-difference relations. In particular, a compact term such as
+`((_ ff.pow p2) alpha)` encodes the formal monomial `alpha^p2`; it does not
+construct an element of a native `F_(p^6)` sort.
+
 Configure a testing build with CoCoA once:
 
 ```sh
@@ -54,12 +62,48 @@ contrib/power_difference/run_tests.py --benchmark
 ```
 
 `--regressions` also checks the BN254 Frobenius implication through compact
-`ff.pow` terms and the explicit `F_7` subfield of `F_49`. `--benchmark` runs
-the intentionally infeasible BN254 naive-multiplication reproducer. The
-benchmark exercises multiplication expansion instead of
+`ff.pow` terms, the explicit `F_7` subfield of `F_49`, and the torus checks
+described below. `--benchmark` runs the intentionally infeasible BN254
+naive-multiplication reproducer. The benchmark exercises multiplication
+expansion instead of
 `PowerDifferenceIdealMembership` and intentionally sets no benchmark-specific
 time or resource limit. It is kept outside the regression suite because a
 successful completion is not expected with current cvc5.
+
+## BN254 torus compression
+
+The torus regressions run the same end-to-end scalar identity against the two
+BN254 tower representations discussed in the notes:
+
+- `torus_e2e_bn254.smt2` uses the corrected tower, starts from
+  `f = a0 + a1*sigma`, derives
+  `alpha = a0/a1` and its `q^2` Frobenius image, runs the cleared compression
+  and decompression formulas, and compares the result directly with
+  `f^((q^6-1)(q^2+1))`. It derives `q^2`, `q^6`, and `q^8` by composing one
+  `q`-power macro instead of pasting independent exponent literals. Its
+  cross-multiplied residual is a member;
+- `torus_e2e_bn254_original_tower.smt2` uses the original optimized tower,
+  where `sigma^2 = tau`, `tau^3 = xi`, and the `q^2`-Frobenius coefficient of
+  `sigma` is not `-1`. The same membership query returns `false`, exposing the
+  representation mismatch described in the notes.
+
+These are polynomial identity checks, not root finding. Rational expressions
+are cross-multiplied, so the corresponding compression or decompression
+statement applies where its original denominators are nonzero. The examples
+model only the algebraic relations needed by each identity over the BN254
+coefficient field. They do not prove denominator nonvanishing, construct native
+`F_(p^6)` or `F_(p^12)` sorts, or verify generated machine code.
+
+The torus files use zero-argument `define-fun` declarations to name their large
+sparse terms. The ideal-membership command expands those definitions
+before CoCoA encoding, and the encoder handles standard `ff.neg` terms used
+for subtraction.
+
+Run the end-to-end scalar check directly with:
+
+```sh
+build/bin/cvc5 test/regress/cli/regress0/ff/torus_e2e_bn254.smt2
+```
 
 In one local run, the benchmark aborted in `NodeBuilder::realloc()` after
 46.495 seconds at 0.996 GiB peak resident memory, before solving began. cvc5

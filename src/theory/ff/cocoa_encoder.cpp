@@ -341,6 +341,11 @@ void CocoaEncoder::encodeTerm(const Node& t)
           elem += d_cache[c];
         }
       }
+      // ff.neg
+      else if (node.getKind() == Kind::FINITE_FIELD_NEG)
+      {
+        elem = -d_cache[node[0]];
+      }
       // ff.mul
       else if (node.getKind() == Kind::FINITE_FIELD_MULT)
       {

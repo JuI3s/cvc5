@@ -908,9 +908,13 @@ set(regress_0_tests
   regress0/ff/multicheck.smt2
   regress0/ff/negneg.smt2
   regress0/ff/ideal_membership_command.smt2
+  regress0/ff/ideal_membership_definitions.smt2
   regress0/ff/ideal_membership_mixed_unknown.smt2
+  regress0/ff/ideal_membership_neg.smt2
   regress0/ff/power_difference_bn254.smt2
   regress0/ff/prime_subfield_f49.smt2
+  regress0/ff/torus_e2e_bn254.smt2
+  regress0/ff/torus_e2e_bn254_original_tower.smt2
   regress0/ff/issue10937.smt2
   regress0/ff/issue11107.smt2
   regress0/ff/issue11932.smt2
