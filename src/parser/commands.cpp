@@ -412,19 +412,7 @@ void CheckIdealMembershipCommand::invoke(cvc5::Solver* solver,
                            << d_target << "~" << std::endl;
   try
   {
-    const cvc5::Sort field = d_target[0].getSort();
     const std::vector<cvc5::Term> assertions = solver->getAssertions();
-    for (const cvc5::Term& assertion : assertions)
-    {
-      if (assertion.getKind() != cvc5::Kind::EQUAL
-          || assertion[0].getSort() != field
-          || !assertion[1].getSort().isFiniteField())
-      {
-        throw std::invalid_argument(
-            "check-ideal-membership requires finite-field equality "
-            "assertions over the target field");
-      }
-    }
     d_result = checkFiniteFieldIdealMembership(solver, assertions, d_target);
     d_commandStatus = CommandSuccess::instance();
   }

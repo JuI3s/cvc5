@@ -17,6 +17,7 @@
 #include "base/modal_exception.h"
 #include "base/output.h"
 #include "decision/decision_engine.h"
+#include "expr/beta_reduce_converter.h"
 #include "expr/bound_var_manager.h"
 #include "expr/node.h"
 #include "expr/node_algorithm.h"
@@ -79,6 +80,7 @@
 #include "theory/rewriter.h"
 #ifdef CVC5_USE_COCOA
 #include "theory/ff/ideal_membership.h"
+#include "theory/substitutions.h"
 #endif
 #include "theory/smt_engine_subsolver.h"
 #include "theory/theory_engine.h"
@@ -1595,11 +1597,54 @@ std::vector<Node> SolverEngine::getSubstitutedAssertions()
 Env& SolverEngine::getEnv() { return *d_env.get(); }
 
 std::optional<bool> SolverEngine::checkFiniteFieldIdealMembership(
-    const std::vector<Node>& equalities, const Node& target)
+    CVC5_UNUSED const std::vector<Node>& equalities,
+    CVC5_UNUSED const Node& target)
 {
 #ifdef CVC5_USE_COCOA
+  const smt::Assertions& assertions = d_smtSolver->getAssertions();
+  const std::unordered_set<Node> definitionSet =
+      assertions.getCurrentAssertionListDefitions();
+  theory::SubstitutionMap definitions;
+  for (const Node& definition : assertions.getAssertionListDefinitions())
+  {
+    if (definition.getKind() == Kind::EQUAL && definition[0].isVar())
+    {
+      definitions.addSubstitution(definition[0], definition[1]);
+    }
+  }
+
+  // This command bypasses normal preprocessing. Expand ordinary define-fun
+  // declarations locally, including beta reduction for definitions with
+  // parameters, without adding their defining equalities to the input ideal.
+  BetaReduceNodeConverter betaReduce(d_env->getNodeManager());
+  auto expandDefinitions = [&definitions, &betaReduce](const Node& node) {
+    return betaReduce.convert(definitions.apply(node));
+  };
+  const Node substitutedTarget = expandDefinitions(target);
+  const TypeNode field = substitutedTarget[0].getType();
+  std::vector<Node> substitutedEqualities;
+  for (const Node& equality : equalities)
+  {
+    if (definitionSet.count(equality) > 0)
+    {
+      continue;
+    }
+    Node substituted = expandDefinitions(equality);
+    if (substituted.getKind() != Kind::EQUAL
+        || substituted[0].getType() != field
+        || !substituted[1].getType().isFiniteField())
+    {
+      throw ModalException(
+          "check-ideal-membership requires finite-field equality "
+          "assertions over the target field");
+    }
+    substitutedEqualities.push_back(substituted);
+  }
   return theory::ff::checkIdealMembership(
-      equalities, target, target[0].getType().getFfSize(), getEnv());
+      substitutedEqualities,
+      substitutedTarget,
+      substitutedTarget[0].getType().getFfSize(),
+      getEnv());
 #else
   throw ModalException(
       "check-ideal-membership requires a build with CoCoA support");

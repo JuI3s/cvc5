@@ -22,8 +22,10 @@ UNIT_TEST = r"^unit/theory/theory_ff_split_gb_black$"
 POWER_DIFFERENCE_FILTER = "TestTheoryFfSplitGb.PowerDifference*"
 REGRESSION_TESTS = (
     r"^regress0/ff/(ideal_membership_command|"
-    r"ideal_membership_mixed_unknown|power_difference_bn254|"
-    r"prime_subfield_f49)\.smt2$"
+    r"ideal_membership_definitions|ideal_membership_mixed_unknown|"
+    r"ideal_membership_neg|"
+    r"power_difference_bn254|prime_subfield_f49|"
+    r"torus_e2e_bn254|torus_e2e_bn254_original_tower)\.smt2$"
 )
 BENCHMARK = (
     REPO_ROOT
@@ -103,7 +105,7 @@ def parse_args():
     parser.add_argument(
         "--regressions",
         action="store_true",
-        help="also run the compact-power and F_49 regression tests",
+        help="also run compact-power, F_49, and torus regression tests",
     )
     parser.add_argument(
         "--benchmark",
