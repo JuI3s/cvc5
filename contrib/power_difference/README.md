@@ -87,6 +87,36 @@ BN254 tower representations discussed in the notes:
   `sigma` is not `-1`. The same membership query returns `false`, exposing the
   representation mismatch described in the notes.
 
+### Generating the torus regressions
+
+The following regression files are generated; do not edit them directly:
+
+- `test/regress/cli/regress0/ff/torus_e2e_bn254.smt2`;
+- `test/regress/cli/regress0/ff/torus_e2e_bn254_original_tower.smt2`.
+
+`contrib/power_difference/generate_torus_e2e.py` produces both files from:
+
+- `contrib/power_difference/torus_e2e_bn254.smt2.in`, the literal SMT-LIB
+  template containing the visible `$placeholders`;
+- `contrib/power_difference/torus_e2e_bn254.json`, the corrected and original
+  tower substitutions.
+
+The Python script only performs this substitution. After changing either
+input, regenerate both checked-in regressions from the repository root:
+
+```sh
+contrib/power_difference/generate_torus_e2e.py
+```
+
+Verify without modifying files:
+
+```sh
+contrib/power_difference/generate_torus_e2e.py --check
+```
+
+`contrib/power_difference/run_tests.py --regressions` runs this drift check
+before executing the regression tests.
+
 These are polynomial identity checks, not root finding. Rational expressions
 are cross-multiplied, so the corresponding compression or decompression
 statement applies where its original denominators are nonzero. The examples

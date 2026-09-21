@@ -2,10 +2,9 @@
 ; Edit contrib/power_difference/torus_e2e_bn254.smt2.in or
 ; contrib/power_difference/torus_e2e_bn254.json, then regenerate.
 ; REQUIRES: cocoa
-; EXPECT: true
+; EXPECT: $expected
 
-; Corrected tower from the notes: sigma^2 = xi and sigma^(q^2) = -sigma.
-; This is the representation required by the compression formulas.
+$description
 ;
 ; Both configurations run this same end-to-end scalar obligation. Start with
 ;
@@ -21,18 +20,18 @@
 (set-logic QF_FF)
 (define-sort F ()
   (_ FiniteField
-     21888242871839275222246405745257275088696311157297823662689037894645226208583))
+     $modulus))
 (declare-fun a0 () F)
 (declare-fun a1 () F)
 (declare-fun sigma () F)
 
 ; Tower configuration.
-(define-fun xi () F (ff.mul sigma sigma))
+(define-fun xi () F $xi_expression)
 
 ; Derive q^2, q^6, and q^8 by composing one q-power operation.
 (define-fun q-frob ((x F)) F
   ((_ ff.pow
-      21888242871839275222246405745257275088696311157297823662689037894645226208583)
+      $modulus)
     x))
 (define-fun q2-frob ((x F)) F (q-frob (q-frob x)))
 (define-fun q6-frob ((x F)) F
@@ -71,7 +70,7 @@
 (assert (= a1-q6 a1))
 (assert
   (= sigma-q2
-    (ff.neg sigma)))
+$sigma_q2_rhs))
 
 ; decoded-numerator/decoded-denominator
 ;   = (f-q6*f-q8)/(f*f-q2) = f^Psi_6(q^2).
