@@ -34,6 +34,9 @@ BENCHMARK = (
     / "benchmarks"
     / "bn254_multiplication_expansion.smt2"
 )
+TORUS_GENERATOR = (
+    REPO_ROOT / "contrib" / "power_difference" / "generate_torus_e2e.py"
+)
 
 
 def run(command, *, env=None):
@@ -137,6 +140,7 @@ def main():
     ctest(build_dir, UNIT_TEST, env=unit_environment(build_dir), verbose=True)
 
     if args.regressions:
+        run([sys.executable, TORUS_GENERATOR, "--check"])
         ctest(build_dir, REGRESSION_TESTS)
     if args.benchmark:
         # This is deliberately not a regression: current cvc5 expands the
