@@ -78,6 +78,26 @@ expansion instead of
 time or resource limit. It is kept outside the regression suite because a
 successful completion is not expected with current cvc5.
 
+## NTT examples
+
+`ntt_negacyclic_n4.smt2` is a literal size-4 port of the identities in
+`koszul/examples/ntt.py`. It checks every coordinate of `INTT(NTT(f)) = f`,
+negacyclic convolution versus pointwise multiplication, and radix-2
+Cooley--Tukey versus the direct specification over `F_8380417`, the NTT
+modulus standardized for ML-DSA. Every input coefficient is symbolic, and
+`psi^4 + 1` is the only ideal generator.
+
+The checked-in regression is generated from the readable SMT-LIB template
+`ntt_e2e_n4.smt2.in` and the small parameter file `ntt_e2e_n4.json`:
+
+```sh
+contrib/power_difference/generate_ntt_e2e.py
+contrib/power_difference/generate_ntt_e2e.py --check
+```
+
+No full size-1024 or NTTRU transform is claimed here. A power-root relation or
+a single CRT factor alone would not constitute either verification.
+
 ## BN254 torus compression
 
 The torus regressions run the same end-to-end scalar identity against the two
