@@ -158,8 +158,8 @@ class CVC5_EXPORT Cmd
       const std::vector<cvc5::Sort>& sorts);
   /** Helper to convert a Grammar to an internal internal::TypeNode */
   static internal::TypeNode grammarToTypeNode(cvc5::Grammar* grammar);
-  /** Invoke the internal finite-field ideal-membership interface. */
-  static std::optional<bool> checkFiniteFieldIdealMembership(
+  /** Invoke an ideal-membership query with check-sat result semantics. */
+  static cvc5::Result checkFiniteFieldIdealMembership(
       cvc5::Solver* solver,
       const std::vector<cvc5::Term>& equalities,
       const cvc5::Term& target);
@@ -457,29 +457,24 @@ class CVC5_EXPORT CheckSatCommand : public Cmd
   std::string getCommandName() const override;
   void toStream(std::ostream& out) const override;
 
- private:
+ protected:
   cvc5::Result d_result;
 }; /* class CheckSatCommand */
 
 /**
- * The command when parsing check-ideal-membership. The current finite-field
- * equality assertions generate an ideal, and this command checks whether its
- * target equality follows from that ideal.
+ * The check-sat command for a pending ideal-membership target. The current
+ * finite-field equality assertions generate the ideal.
  */
-class CVC5_EXPORT CheckIdealMembershipCommand : public Cmd
+class CVC5_EXPORT CheckIdealMembershipCommand : public CheckSatCommand
 {
  public:
   CheckIdealMembershipCommand(cvc5::Term target);
 
   cvc5::Term getTarget() const;
   void invoke(cvc5::Solver* solver, parser::SymManager* sm) override;
-  void printResult(cvc5::Solver* solver, std::ostream& out) const override;
-  std::string getCommandName() const override;
-  void toStream(std::ostream& out) const override;
 
  private:
   cvc5::Term d_target;
-  std::optional<bool> d_result;
 }; /* class CheckIdealMembershipCommand */
 
 /**

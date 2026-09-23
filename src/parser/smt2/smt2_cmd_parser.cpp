@@ -180,21 +180,40 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
       {
         d_lex.parseError("Sygus does not support check-sat command.");
       }
-      cmd.reset(new CheckSatCommand());
+      if (d_idealMembershipTarget.isNull())
+      {
+        cmd.reset(new CheckSatCommand());
+      }
+      else
+      {
+        cmd.reset(new CheckIdealMembershipCommand(d_idealMembershipTarget));
+        d_idealMembershipTarget = Term();
+      }
     }
     break;
     // (check-sat-assuming (<term>*))
     case Token::CHECK_SAT_ASSUMING_TOK:
     {
       d_state.checkThatLogicIsSet();
+      if (!d_idealMembershipTarget.isNull())
+      {
+        d_lex.parseError(
+            "Ideal-membership queries require an ordinary check-sat");
+      }
       std::vector<Term> terms = d_tparser.parseTermList();
       cmd.reset(new CheckSatAssumingCommand(terms));
     }
     break;
+    // Register the target for the next (check-sat):
     // (check-ideal-membership <finite-field equality>)
     case Token::CHECK_IDEAL_MEMBERSHIP_TOK:
     {
       d_state.checkThatLogicIsSet();
+      if (!d_idealMembershipTarget.isNull())
+      {
+        d_lex.parseError(
+            "Expected check-sat before another check-ideal-membership");
+      }
       Term target = d_tparser.parseTerm();
       if (target.getKind() != Kind::EQUAL
           || !target[0].getSort().isFiniteField())
@@ -202,7 +221,8 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
         d_lex.parseError(
             "Expected a finite-field equality for check-ideal-membership");
       }
-      cmd.reset(new CheckIdealMembershipCommand(target));
+      d_idealMembershipTarget = target;
+      cmd.reset(new EmptyCommand("check-ideal-membership"));
     }
     break;
     // (check-synth)
@@ -834,6 +854,7 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
     case Token::RESET_TOK:
     {
       cmd.reset(new ResetCommand());
+      d_idealMembershipTarget = Term();
       // reset the state of the parser, which is independent of the symbol
       // manager
       d_state.reset();
@@ -843,6 +864,7 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
     case Token::RESET_ASSERTIONS_TOK:
     {
       cmd.reset(new ResetAssertionsCommand());
+      d_idealMembershipTarget = Term();
     }
     break;
     // (set-feature <attribute>)

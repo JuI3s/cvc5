@@ -10,3 +10,4 @@
 (assert (= (ff.mul x x) (as ff1 F)))
 (assert (= (ff.mul x y) (as ff0 F)))
 (check-ideal-membership (= y (as ff0 F)))
+(check-sat)

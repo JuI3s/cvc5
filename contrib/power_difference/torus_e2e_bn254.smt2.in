@@ -78,3 +78,4 @@ $sigma_q2_rhs))
   (=
     (ff.mul decoded-numerator f f-q2)
     (ff.mul decoded-denominator f-q6 f-q8)))
+(check-sat)

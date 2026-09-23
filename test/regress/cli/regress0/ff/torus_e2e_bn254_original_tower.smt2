@@ -2,7 +2,7 @@
 ; Edit contrib/power_difference/torus_e2e_bn254.smt2.in or
 ; contrib/power_difference/torus_e2e_bn254.json, then regenerate.
 ; REQUIRES: cocoa
-; EXPECT: false
+; EXPECT: unsat
 
 ; Original optimized tower from the notes: sigma^2 = tau and tau^3 = xi.
 ; Eliminating tau gives sigma^6 = xi. For xi = 9+u and u^2 = -1,
@@ -82,3 +82,4 @@
   (=
     (ff.mul decoded-numerator f f-q2)
     (ff.mul decoded-denominator f-q6 f-q8)))
+(check-sat)

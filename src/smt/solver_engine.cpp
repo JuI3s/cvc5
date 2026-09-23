@@ -1596,10 +1596,12 @@ std::vector<Node> SolverEngine::getSubstitutedAssertions()
 
 Env& SolverEngine::getEnv() { return *d_env.get(); }
 
-std::optional<bool> SolverEngine::checkFiniteFieldIdealMembership(
+Result SolverEngine::checkFiniteFieldIdealMembership(
     CVC5_UNUSED const std::vector<Node>& equalities,
     CVC5_UNUSED const Node& target)
 {
+  beginCall(true);
+  d_state->notifyCheckSat();
 #ifdef CVC5_USE_COCOA
   const smt::Assertions& assertions = d_smtSolver->getAssertions();
   const std::unordered_set<Node> definitionSet =
@@ -1640,11 +1642,17 @@ std::optional<bool> SolverEngine::checkFiniteFieldIdealMembership(
     }
     substitutedEqualities.push_back(substituted);
   }
-  return theory::ff::checkIdealMembership(
+  const std::optional<bool> membership = theory::ff::checkIdealMembership(
       substitutedEqualities,
       substitutedTarget,
       substitutedTarget[0].getType().getFfSize(),
       getEnv());
+  Result result = membership.has_value()
+                      ? Result(*membership ? Result::SAT : Result::UNSAT)
+                      : Result(Result::UNKNOWN, UnknownExplanation::INCOMPLETE);
+  d_state->notifyCheckSatResult(result);
+  endCall();
+  return Result(result, d_env->getOptions().driver.filename);
 #else
   throw ModalException(
       "check-ideal-membership requires a build with CoCoA support");

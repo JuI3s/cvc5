@@ -853,9 +853,9 @@ class CVC5_EXPORT SolverEngine
    */
   Env& getEnv();
 
-  /** Check finite-field ideal membership without a satisfiability query. */
-  std::optional<bool> checkFiniteFieldIdealMembership(
-      const std::vector<Node>& equalities, const Node& target);
+  /** Check finite-field ideal membership with check-sat result semantics. */
+  Result checkFiniteFieldIdealMembership(const std::vector<Node>& equalities,
+                                         const Node& target);
   /* .......................................................................  */
  private:
   /* .......................................................................  */

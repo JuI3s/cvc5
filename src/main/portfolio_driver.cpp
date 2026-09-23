@@ -59,6 +59,11 @@ bool ExecutionContext::solveContinuous(parser::InputParser* parser,
     {
       if (dynamic_cast<CheckSatCommand*>(cc) != nullptr)
       {
+        const auto* membership = dynamic_cast<CheckIdealMembershipCommand*>(cc);
+        if (membership != nullptr)
+        {
+          d_idealMembershipTarget = membership->getTarget();
+        }
         d_hasReadCheckSat = true;
         break;
       }
@@ -155,7 +160,15 @@ bool ExecutionContext::continueAfterSolving(parser::InputParser* parser)
 
 bool ExecutionContext::runCheckSatCommand()
 {
-  std::shared_ptr<Cmd> cmd(new CheckSatCommand());
+  std::shared_ptr<Cmd> cmd;
+  if (d_idealMembershipTarget.isNull())
+  {
+    cmd.reset(new CheckSatCommand());
+  }
+  else
+  {
+    cmd.reset(new CheckIdealMembershipCommand(d_idealMembershipTarget));
+  }
   Command command(cmd);
   return d_executor->doCommand(&command);
 }
