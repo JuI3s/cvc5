@@ -1,8 +1,9 @@
 ; REQUIRES: cocoa
-; EXPECT: true
+; EXPECT: sat
 
 ; BN254 base-field prime q. The asserted equality generates <x^q - x>, and
-; check-ideal-membership asks directly whether x^(q^2) - x belongs to it.
+; check-ideal-membership registers x^(q^2) - x as the positive target for the
+; final check-sat query.
 ; Power-difference reduction maps the target to zero without an inverse
 ; witness, a combined ideal, general Groebner-basis construction, or root
 ; finding.
@@ -13,7 +14,7 @@
 ; identity without constructing an F_(q^2) sort.
 ; `ff.pow` is the compact indexed operator added by this research prototype.
 (set-info :category "crafted")
-(set-info :status unsat)
+(set-info :status sat)
 (set-logic QF_FF)
 (define-sort F ()
   (_ FiniteField
@@ -30,3 +31,4 @@
          479095176016622842441988045216678740799252316531100822436447802254070093686378237447841051819437871971188232314813100261836255634139586948646393022867889)
        x)
       x))
+(check-sat)

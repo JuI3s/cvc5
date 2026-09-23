@@ -1,5 +1,5 @@
 ; REQUIRES: cocoa
-; EXPECT: true
+; EXPECT: sat
 
 ; The ideal-membership encoder supports subtraction through ff.neg.
 (set-logic QF_FF)
@@ -8,3 +8,4 @@
 (declare-fun y () F)
 (assert (= (ff.add x (ff.neg y)) (as ff0 F)))
 (check-ideal-membership (= x y))
+(check-sat)

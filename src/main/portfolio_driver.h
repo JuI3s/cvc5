@@ -41,6 +41,8 @@ class ExecutionContext
   CommandExecutor* d_executor;
   /* Whether a check-sat command has been read */
   bool d_hasReadCheckSat;
+  /** Optional ideal-membership target for the pending check-sat. */
+  cvc5::Term d_idealMembershipTarget;
   /** The logic, if it has been set by a command */
   std::optional<std::string> d_logic;
   /** The last stored declarations and named terms **/

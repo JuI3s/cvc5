@@ -5,7 +5,7 @@
   "towers": [
     {
       "filename": "torus_e2e_bn254.smt2",
-      "expected": "true",
+      "expected": "sat",
       "description": [
         "Corrected tower from the notes: sigma^2 = xi and sigma^(q^2) = -sigma.",
         "This is the representation required by the compression formulas."
@@ -17,7 +17,7 @@
     },
     {
       "filename": "torus_e2e_bn254_original_tower.smt2",
-      "expected": "false",
+      "expected": "unsat",
       "description": [
         "Original optimized tower from the notes: sigma^2 = tau and tau^3 = xi.",
         "Eliminating tau gives sigma^6 = xi. For xi = 9+u and u^2 = -1,",

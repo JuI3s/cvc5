@@ -201,13 +201,13 @@ internal::TypeNode Cmd::grammarToTypeNode(cvc5::Grammar* grammar)
                             : sortToTypeNode(grammar->resolve());
 }
 
-std::optional<bool> Cmd::checkFiniteFieldIdealMembership(
+cvc5::Result Cmd::checkFiniteFieldIdealMembership(
     cvc5::Solver* solver,
     const std::vector<cvc5::Term>& equalities,
     const cvc5::Term& target)
 {
-  return solver->d_slv->checkFiniteFieldIdealMembership(
-      termVectorToNodes(equalities), termToNode(target));
+  return cvc5::Result(solver->d_slv->checkFiniteFieldIdealMembership(
+      termVectorToNodes(equalities), termToNode(target)));
 }
 
 std::ostream& operator<<(std::ostream& out, const Cmd& c)
@@ -420,29 +420,6 @@ void CheckIdealMembershipCommand::invoke(cvc5::Solver* solver,
   {
     d_commandStatus = new CommandFailure(e.what());
   }
-}
-
-void CheckIdealMembershipCommand::printResult(CVC5_UNUSED cvc5::Solver* solver,
-                                              std::ostream& out) const
-{
-  if (!d_result.has_value())
-  {
-    out << "unknown" << endl;
-  }
-  else
-  {
-    out << (*d_result ? "true" : "false") << endl;
-  }
-}
-
-std::string CheckIdealMembershipCommand::getCommandName() const
-{
-  return "check-ideal-membership";
-}
-
-void CheckIdealMembershipCommand::toStream(std::ostream& out) const
-{
-  out << "(check-ideal-membership " << d_target << ')';
 }
 
 /* -------------------------------------------------------------------------- */

@@ -207,6 +207,7 @@ class CVC5_EXPORT CVC5ApiOptionException : public CVC5ApiRecoverableException
  */
 class CVC5_EXPORT Result
 {
+  friend class parser::Cmd;
   friend class Solver;
 
  public:

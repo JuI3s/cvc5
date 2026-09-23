@@ -2,7 +2,7 @@
 ; Edit contrib/power_difference/torus_e2e_bn254.smt2.in or
 ; contrib/power_difference/torus_e2e_bn254.json, then regenerate.
 ; REQUIRES: cocoa
-; EXPECT: true
+; EXPECT: sat
 
 ; Corrected tower from the notes: sigma^2 = xi and sigma^(q^2) = -sigma.
 ; This is the representation required by the compression formulas.
@@ -79,3 +79,4 @@
   (=
     (ff.mul decoded-numerator f f-q2)
     (ff.mul decoded-denominator f-q6 f-q8)))
+(check-sat)

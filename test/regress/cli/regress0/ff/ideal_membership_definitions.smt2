@@ -1,5 +1,5 @@
 ; REQUIRES: cocoa
-; EXPECT: false
+; EXPECT: unsat
 
 ; Definitions are expanded as local abbreviations. Their defining equalities
 ; must not become generators of the mathematical input ideal.
@@ -8,3 +8,4 @@
 (declare-fun x () F)
 (define-fun square () F (ff.mul x x))
 (check-ideal-membership (= square (as ff0 F)))
+(check-sat)

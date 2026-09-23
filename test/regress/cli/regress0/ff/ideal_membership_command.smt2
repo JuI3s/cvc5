@@ -1,5 +1,5 @@
 ; REQUIRES: cocoa
-; EXPECT: false
+; EXPECT: unsat
 
 ; This checks literal ideal membership, not finite-field entailment. Although
 ; x^2 = 0 implies x = 0 over a field, x is not an element of <x^2>.
@@ -8,3 +8,4 @@
 (declare-fun x () F)
 (assert (= (ff.mul x x) (as ff0 F)))
 (check-ideal-membership (= x (as ff0 F)))
+(check-sat)

@@ -47,6 +47,8 @@ class Smt2CmdParser
   Smt2State& d_state;
   /** The term parser */
   Smt2TermParser& d_tparser;
+  /** Target consumed by the next check-sat as an ideal-membership query. */
+  Term d_idealMembershipTarget;
   /** Map strings to tokens */
   std::map<std::string, Token> d_table;
 };
