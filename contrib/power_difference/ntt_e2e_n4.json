@@ -1,0 +1,21 @@
+{
+  "filename": "ntt_negacyclic_n4.smt2",
+  "modulus": "8380417",
+  "transform_size": "4",
+  "transform_size_inverse": "6285313",
+  "checks": [
+    {
+      "identity": "inverse_round_trip",
+      "coordinates": 4
+    },
+    {
+      "identity": "convolution",
+      "coordinates": 4
+    },
+    {
+      "identity": "cooley_tukey_matches_specification",
+      "coordinates": 4
+    }
+  ],
+  "expected": "sat"
+}

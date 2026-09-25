@@ -24,6 +24,7 @@ REGRESSION_TESTS = (
     r"^regress0/ff/(ideal_membership_command|"
     r"ideal_membership_definitions|ideal_membership_mixed_unknown|"
     r"ideal_membership_neg|"
+    r"ntt_negacyclic_n4|"
     r"power_difference_bn254|prime_subfield_f49|"
     r"torus_e2e_bn254|torus_e2e_bn254_original_tower)\.smt2$"
 )
@@ -37,6 +38,7 @@ BENCHMARK = (
 TORUS_GENERATOR = (
     REPO_ROOT / "contrib" / "power_difference" / "generate_torus_e2e.py"
 )
+NTT_GENERATOR = REPO_ROOT / "contrib" / "power_difference" / "generate_ntt_e2e.py"
 
 
 def run(command, *, env=None):
@@ -108,7 +110,7 @@ def parse_args():
     parser.add_argument(
         "--regressions",
         action="store_true",
-        help="also run compact-power, F_49, and torus regression tests",
+        help="also run compact-power, NTT, F_49, and torus regression tests",
     )
     parser.add_argument(
         "--benchmark",
@@ -141,6 +143,7 @@ def main():
 
     if args.regressions:
         run([sys.executable, TORUS_GENERATOR, "--check"])
+        run([sys.executable, NTT_GENERATOR, "--check"])
         ctest(build_dir, REGRESSION_TESTS)
     if args.benchmark:
         # This is deliberately not a regression: current cvc5 expands the
